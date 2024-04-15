@@ -1,0 +1,23 @@
+/* This is a lexer check
+
+
+
+/// // /* */
+
+break case default else float if 5 5 5 hello 
+input int output switch
+while( boolean)
+{ ;,:=}===
+== = != < > >= <=
++ - 
+* /
+|| \\\ |||
+|||
+&&&
+&&
+!
+static_cast<int> static_cast<float static_cast<float>
+hello 53994 2020 594 322 -555
+nice good morning
+
+/* end of lexer check */

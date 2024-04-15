@@ -1,34 +1,92 @@
 from sly import Lexer
+import re
 from utils import error_print
 
 
 class CpqLexer(Lexer):
 
-    tokens = {SUM, ZERO, HEIGHT, DOUBLE, NUMBER, LPAREN, RPAREN}
-    ignore = " \t"
+    tokens = {
+        BREAK,
+        CASE,
+        DEFAULT,
+        ELSE,
+        FLOAT,
+        IF,
+        INPUT,
+        INT,
+        OUTPUT,
+        SWITCH,
+        WHILE,
+        LBRACES,
+        RBRACES,
+        LPAREN,
+        RPAREN,
+        COMMA,
+        COLON,
+        SEMICOLON,
+        ASSIGN,
+        NUM,
+        ID,
+        RELOP,
+        ADDOP,
+        MULOP,
+        OR,
+        AND,
+        NOT,
+        CAST,
+    }
+    
+    ignore = ' \t\r'  # whitespace
+    ignore_newline = r"\n+"
+    
+    # comments
+    @_(r'(\"[^\"]*\"(?!\\))|(//[^\n]*$|/(?!\\)\*[\s\S]*?\*(?!\\)/)')
+    def COMMENT(self, t):
+        pass  # Just ignore the comments
+    
+    # count newlines
+    def ignore_newline(self, t):
+        self.lineno += t.value.count("\n")
 
     # Tokens
-    SUM = r"sum"
-    ZERO = r"zero"
-    HEIGHT = r"height"
-    DOUBLE = r"double"
-    NUMBER = r"[0-9]+"
+    BREAK = r"break"
+    CASE = r"case"
+    DEFAULT = r"default"
+    ELSE = r"else"
+    FLOAT = r"float"
+    IF = r"if"
+    INPUT = r"input"
+    INT = r"int"
+    OUTPUT = r"output"
+    SWITCH = r"switch"
+    WHILE = r"while"
 
     # Special symbols
+    LBRACES = r"\{"
+    RBRACES = r"\}"
     LPAREN = r"\("
     RPAREN = r"\)"
+    COMMA = r"\,"
+    COLON = r"\:"
+    SEMICOLON = r"\;"
+    RELOP = r"(==|!=|>=|<=|<|>)"
+    ASSIGN = r"\="
 
-    # Ignored pattern
-    ignore_newline = r"\n+"
+    # more tokens
+    CAST = r"(static_cast<int>)|(static_cast<float>)"
+    NUM = r"[0-9]+|([0-9]+\.[0-9]*)"
+    ID = r"[a-zA-Z]([a-zA-Z]|[0-9])*"
+    ADDOP = r"[+-]"
+    MULOP = r"[*/]"
+    OR = r"\|\|"
+    AND = r"&&"
+    NOT = r"\!"
+    
 
     def __init__(self, symbol_table):
         super().__init__()
         self.symbol_table = symbol_table
         self.errors_detected = False
-
-    # Extra action for newlines
-    def ignore_newline(self, t):
-        self.lineno += t.value.count("\n")
 
     def error(self, t):
         error_print(

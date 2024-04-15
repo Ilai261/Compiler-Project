@@ -1,5 +1,5 @@
 from cpq_lexer import CpqLexer
-from cpq_parser import CpqParser
+# from cpq_parser import CpqParser
 from symbol_table import SymbolTable
 from utils import error_print, legal_filename
 
@@ -10,7 +10,7 @@ class Compiler:
     def __init__(self):
         self.symbol_table = SymbolTable()
         self.lexer = CpqLexer(self.symbol_table)
-        self.parser = CpqParser(self.symbol_table)
+        # self.parser = CpqParser(self.symbol_table)
 
     def run_on_file(self, filename: str):
         error_print("-------Ilai Azaria 327650255-------")
@@ -21,9 +21,11 @@ class Compiler:
             with open(filename, "r") as file:
                 try:
                     input_text = file.read()
-                    result = self.parser.parse(self.lexer.tokenize(input_text))
+                    for tok in self.lexer.tokenize(input_text):
+                        print("type=%r, value=%r" % (tok.type, tok.value))
+                    # result = self.parser.parse(self.lexer.tokenize(input_text))
                     # for now we print the code, will check print variable, and create a file soon
-                    print(f"The code generated is: {result.val}")
+                    # print(f"The code generated is: {result.val}")
 
                     # after we print the new code to the file, we need to add a signature line at the end
                 except:
