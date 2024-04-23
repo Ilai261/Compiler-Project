@@ -1,4 +1,5 @@
 from cpq_lexer import CpqLexer
+
 # from cpq_parser import CpqParser
 from symbol_table import SymbolTable
 from utils import error_print, legal_filename
@@ -26,9 +27,11 @@ class Compiler:
                     # result = self.parser.parse(self.lexer.tokenize(input_text))
                     # for now we print the code, will check print variable, and create a file soon
                     # print(f"The code generated is: {result.val}")
-
+                    print(f"symbol table after lexer: {self.symbol_table}")
                     # after we print the new code to the file, we need to add a signature line at the end
-                except:
+                except Exception as e:
+                    print(type(e).__name__, "–", e)
                     error_print(f"error: Compilation failed: {PARSING_ERROR_MSG}")
         except:
+            print(type(e).__name__, "–", e)
             error_print(f"error: could not open file {filename}...")

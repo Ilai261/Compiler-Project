@@ -1,5 +1,7 @@
-from sly import Lexer
 import re
+
+from sly import Lexer
+from symbol_table import SymbolTable
 from utils import error_print
 
 
@@ -35,15 +37,15 @@ class CpqLexer(Lexer):
         NOT,
         CAST,
     }
-    
-    ignore = ' \t\r'  # whitespace
+
+    ignore = " \t\r"  # whitespace
     ignore_newline = r"\n+"
-    
+
     # comments
-    @_(r'(\"[^\"]*\"(?!\\))|(//[^\n]*$|/(?!\\)\*[\s\S]*?\*(?!\\)/)')
+    @_(r"(\"[^\"]*\"(?!\\))|(//[^\n]*$|/(?!\\)\*[\s\S]*?\*(?!\\)/)")
     def COMMENT(self, t):
-        pass  # Just ignore the comments
-    
+        self.lineno += t.value.count("\n")  # count lines in comment
+
     # count newlines
     def ignore_newline(self, t):
         self.lineno += t.value.count("\n")
@@ -81,12 +83,15 @@ class CpqLexer(Lexer):
     OR = r"\|\|"
     AND = r"&&"
     NOT = r"\!"
-    
 
     def __init__(self, symbol_table):
         super().__init__()
-        self.symbol_table = symbol_table
+        self.symbol_table: SymbolTable = symbol_table
         self.errors_detected = False
+
+    def ID(self, t):
+        self.symbol_table.add_variable(variable_name=str(t.value))
+        return t
 
     def error(self, t):
         error_print(

@@ -93,7 +93,7 @@ class TreeParser(Parser):
         return Treelist(p.tree.val, p.tree.height)
 
     def error(self, p):
-        print(f"We have a parsing error at line {p.lineno}!")
+        print(f"There is a parsing error at line {p.lineno}!")
         if not p:
             print("End of File!")
             return
