@@ -1,5 +1,6 @@
 from cpq_lexer import CpqLexer
 from cpq_parser import CpqParser
+from parser_classes import CodeConstruct
 from symbol_table import SymbolTable
 from utils import error_print, legal_filename
 
@@ -23,10 +24,14 @@ class Compiler:
                     input_text = file.read()
                     for tok in self.lexer.tokenize(input_text):
                         print("type=%r, value=%r" % (tok.type, tok.value))
-                    result = self.parser.parse(self.lexer.tokenize(input_text))
+                    result: CodeConstruct = self.parser.parse(
+                        self.lexer.tokenize(input_text)
+                    )
                     # for now we print the code, will check print variable, and create a file soon
-                    print(f"The code generated is: {result}")
-                    print(f"symbol table after lexer: {self.symbol_table}")
+                    print(
+                        f"The code generated is:\n{result.generated_code}"
+                    )  # needs to change to '.generated_code'
+                    print(f"final symbol table: {self.symbol_table.table}")
                     # after we print the new code to the file, we need to add a signature line at the end
                 except Exception as e:
                     print(type(e).__name__, "–", e)

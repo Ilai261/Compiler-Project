@@ -1,5 +1,10 @@
 import sys
 
+INT = "int"
+FLOAT = "float"
+PLUS = "+"
+MINUS = "-"
+
 
 def error_print(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)

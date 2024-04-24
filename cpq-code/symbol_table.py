@@ -15,8 +15,10 @@ class SymbolTable:
         table += "----------------------------"
         return table
 
+    # if variable already in table - does nothing!
     def add_variable(self, variable_name, variable_type=None):
-        self.table[variable_name] = variable_type
+        if variable_name not in self.table.keys():
+            self.table[variable_name] = variable_type
 
     def variable_in_table(self, variable_name):
         return self.table[variable_name]

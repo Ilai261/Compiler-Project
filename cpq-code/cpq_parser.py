@@ -1,7 +1,9 @@
 from code_generator import CodeGenerator
 from cpq_lexer import CpqLexer
+from parser_classes import CodeConstruct
 from sly import Parser
 from symbol_table import SymbolTable
+from utils import FLOAT, INT
 
 
 class CpqParser(Parser):
@@ -9,23 +11,50 @@ class CpqParser(Parser):
 
     @_("declarations stmt_block")
     def program(self, p):
-        return "nice"
+        return CodeConstruct(
+            generated_code=(
+                p.declarations.generated_code + "\n" + p.stmt_block.generated_code
+            )
+        )
 
-    @_("declarations declaration", "empty")
+    @_("declarations declaration")
     def declarations(self, p):
-        return ""
+        return CodeConstruct(
+            generated_code=(
+                p.declarations.generated_code + "\n" + p.declaration.generated_code
+            )
+        )
+
+    @_("empty")
+    def declarations(self, p):
+        return CodeConstruct(generated_code="")
 
     @_("idlist COLON type SEMICOLON")
     def declaration(self, p):
-        return ""
+        for variable in p.idlist:
+            self.symbol_table.change_variable_type(
+                variable_name=variable, variable_type=p.type
+            )
+        return CodeConstruct(generated_code="")
 
-    @_("INT", "FLOAT")
+    @_("INT")
     def type(self, p):
-        return ""
+        return INT
 
-    @_("idlist COMMA ID", "ID")
+    @_("FLOAT")
+    def type(self, p):
+        return FLOAT
+
+    @_("idlist COMMA ID")
     def idlist(self, p):
-        return ""
+        p.idlist.append(p.ID)
+        return p.idlist
+
+    @_("ID")
+    def idlist(self, p):
+        return [
+            p.ID,
+        ]
 
     @_(
         "assignment_stmt",
@@ -38,11 +67,18 @@ class CpqParser(Parser):
         "stmt_block",
     )
     def stmt(self, p):
-        return ""
+        return CodeConstruct(generated_code=p[0].generated_code)
 
     @_("ID ASSIGN expression SEMICOLON")
     def assignment_stmt(self, p):
-        return ""
+        expression: CodeConstruct = p.expression
+        retval_var = expression.retval_var
+        generated_code = self.code_generator.generate_assignment_stmt(
+            expression_code=expression.generated_code,
+            id=p.ID,
+            expression_var=retval_var,
+        )
+        return CodeConstruct(generated_code=generated_code)
 
     @_("INPUT LPAREN ID RPAREN SEMICOLON")
     def input_stmt(self, p):
@@ -79,11 +115,17 @@ class CpqParser(Parser):
 
     @_("LBRACES stmtlist RBRACES")
     def stmt_block(self, p):
-        return ""
+        return p.stmtlist
 
-    @_("stmtlist stmt", "empty")
+    @_("stmtlist stmt")
     def stmtlist(self, p):
-        return ""
+        return CodeConstruct(
+            generated_code=p.stmtlist.generated_code + "\n" + p.stmt.generated_code
+        )
+
+    @_("empty")
+    def stmtlist(self, p):
+        return CodeConstruct(generated_code="")
 
     @_("boolexpr OR boolterm", "boolterm")
     def boolexpr(self, p):
@@ -97,9 +139,25 @@ class CpqParser(Parser):
     def boolfactor(self, p):
         return ""
 
-    @_("expression ADDOP term", "term")
+    @_("expression ADDOP term")
     def expression(self, p):
-        return ""
+        # take term's last retval and add it to expression's retval, this is the new expression retval
+        expression: CodeConstruct = p.expression
+        expression_retval_var = expression.retval_var
+        term: CodeConstruct = p.term
+        term_retval_var = term.retval_var
+        generated_code, retval_var = self.code_generator.generate_expression(
+            expression_code=expression.generated_code,
+            expression_retval_var=expression_retval_var,
+            addop=p.ADDOP,
+            term_code=term.generated_code,
+            term_retval_var=term_retval_var,
+        )
+        return CodeConstruct(generated_code=generated_code, retval_var=retval_var)
+
+    @_("term")
+    def expression(self, p):
+        return p.term
 
     @_("term MULOP factor", "factor")
     def term(self, p):
@@ -114,14 +172,15 @@ class CpqParser(Parser):
         pass
 
     def error(self, p):
-        print(f"There is a parsing error at line {p.lineno}!")
-        if not p:
-            print("End of File!")
-            return
-        self.restart()
+        if p:
+            print("Syntax error at token", p.type)
+            # Just discard the token and tell the parser it's okay.
+            self.errok()
+        else:
+            print("Syntax error at EOF")
 
     def __init__(self, symbol_table):
         super().__init__()
         self.symbol_table: SymbolTable = symbol_table
         self.errors_detected = False
-        self.code_generator: CodeGenerator = CodeGenerator()
+        self.code_generator: CodeGenerator = CodeGenerator(symbol_table)
