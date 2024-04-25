@@ -141,7 +141,7 @@ class CpqParser(Parser):
 
     @_("expression ADDOP term")
     def expression(self, p):
-        # take term's last retval and add it to expression's retval, this is the new expression retval
+        # take term's last retval and addop it to expression's retval, this is the new expression retval
         expression: CodeConstruct = p.expression
         expression_retval_var = expression.retval_var
         term: CodeConstruct = p.term
@@ -159,13 +159,41 @@ class CpqParser(Parser):
     def expression(self, p):
         return p.term
 
-    @_("term MULOP factor", "factor")
+    @_("term MULOP factor")
     def term(self, p):
-        return ""
+        # take factor's last retval and mulop it to term's retval, this is the new term retval
+        term: CodeConstruct = p.term
+        term_retval_var = term.retval_var
+        factor: CodeConstruct = p.factor
+        factor_retval_var = factor.retval_var
+        generated_code, retval_var = self.code_generator.generate_term(
+            term_code=term.generated_code,
+            term_retval_var=term_retval_var,
+            mulop=p.MULOP,
+            factor_code=factor.generated_code,
+            factor_retval_var=factor_retval_var,
+        )
+        return CodeConstruct(generated_code=generated_code, retval_var=retval_var)
 
-    @_("LPAREN expression RPAREN", "CAST LPAREN expression RPAREN", "ID", "NUM")
+    @_("factor")
+    def term(self, p):
+        return p.factor
+
+    @_("LPAREN expression RPAREN")
+    def factor(self, p):
+        return p.expression
+
+    @_("CAST LPAREN expression RPAREN")
     def factor(self, p):
         return ""
+
+    @_("ID")
+    def factor(self, p):
+        return CodeConstruct(generated_code="", retval_var=p.ID)
+
+    @_("NUM")
+    def factor(self, p):
+        return CodeConstruct(generated_code="", retval_var=p.NUM)
 
     @_("")
     def empty(self, p):
