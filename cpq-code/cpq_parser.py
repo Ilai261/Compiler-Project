@@ -11,11 +11,11 @@ class CpqParser(Parser):
 
     @_("declarations stmt_block")
     def program(self, p):
-        return CodeConstruct(
-            generated_code=(
-                p.declarations.generated_code + "\n" + p.stmt_block.generated_code
-            )
+        print("hey!")
+        generated_code = (
+            p.declarations.generated_code + "\n" + p.stmt_block.generated_code
         )
+        return CodeConstruct(generated_code=generated_code)
 
     @_("declarations declaration")
     def declarations(self, p):
@@ -67,7 +67,8 @@ class CpqParser(Parser):
         "stmt_block",
     )
     def stmt(self, p):
-        return CodeConstruct(generated_code=p[0].generated_code)
+        construct: CodeConstruct = p[0]
+        return CodeConstruct(generated_code=construct.generated_code)
 
     @_("ID ASSIGN expression SEMICOLON")
     def assignment_stmt(self, p):
@@ -115,16 +116,18 @@ class CpqParser(Parser):
 
     @_("LBRACES stmtlist RBRACES")
     def stmt_block(self, p):
+        print("hey!")
         return p.stmtlist
 
     @_("stmtlist stmt")
     def stmtlist(self, p):
-        return CodeConstruct(
-            generated_code=p.stmtlist.generated_code + "\n" + p.stmt.generated_code
-        )
+        print("hey!")
+        generated_code = p.stmtlist.generated_code + "\n" + p.stmt.generated_code
+        return CodeConstruct(generated_code=generated_code)
 
     @_("empty")
     def stmtlist(self, p):
+        print("hey!")
         return CodeConstruct(generated_code="")
 
     @_("boolexpr OR boolterm", "boolterm")

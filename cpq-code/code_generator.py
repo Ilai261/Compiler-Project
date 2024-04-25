@@ -12,10 +12,11 @@ class CodeGenerator:
         self.symbol_table: SymbolTable = symbol_table
 
     def generate_assignment_stmt(self, expression_code, id, expression_var):
+        # we need to add a check, if the expression is int and id is float we need to cast the expression retval. also if expression is float and id is int we put out an error
         generated_code = f"{expression_code}\n"
         if self.symbol_table.get_variable_type(id) == INT:
             generated_code += f"IASN {id} {expression_var}"
-        elif self.symbol_table.get_variable_type(p.ID) == FLOAT:
+        elif self.symbol_table.get_variable_type(id) == FLOAT:
             generated_code += f"RASN {id} {expression_var}"
         return generated_code
 
@@ -100,52 +101,51 @@ class CodeGenerator:
             new_retval_var = (
                 self.variable_generator.get_new_int_variable()
             )  # make sure variable is new
-            generated_code += f"{COMMAND[INT]} {new_retval_var} {expression_retval_var} {term_retval_var}"
+            generated_code += (
+                f"{COMMAND[INT]} {new_retval_var} {term_retval_var} {factor_retval_var}"
+            )
             return generated_code, new_retval_var
 
         # both are floats
-        elif (
-            expression_retval_var.startswith(FLOAT_VAR)
-            or is_float(expression_retval_var)
-        ) and (term_retval_var.startswith(FLOAT_VAR) or is_float(term_retval_var)):
+        elif (term_retval_var.startswith(FLOAT_VAR) or is_float(term_retval_var)) and (
+            factor_retval_var.startswith(FLOAT_VAR) or is_float(factor_retval_var)
+        ):
             new_retval_var = (
                 self.variable_generator.get_new_float_variable()
             )  # make sure variable is new
-            generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {expression_retval_var} {term_retval_var}"
+            generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {term_retval_var} {factor_retval_var}"
             return generated_code, new_retval_var
 
-        # expression is float term is int, need to cast
-        elif (
-            expression_retval_var.startswith(FLOAT_VAR)
-            or is_float(expression_retval_var)
-        ) and (term_retval_var.startswith(INT_VAR) or is_integer(term_retval_var)):
+        # term is float factor is int, need to cast
+        elif (term_retval_var.startswith(FLOAT_VAR) or is_float(term_retval_var)) and (
+            factor_retval_var.startswith(INT_VAR) or is_integer(factor_retval_var)
+        ):
+            new_retval_var = (
+                self.variable_generator.get_new_float_variable()
+            )  # make sure variable is new
+            if is_integer(factor_retval_var):
+                term_retval_var += ".0"
+                generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {term_retval_var} {factor_retval_var}"
+                return generated_code, new_retval_var
+            else:
+                new_factor = self.variable_generator.get_new_float_variable()
+                generated_code += f"ITOR {new_factor} {factor_retval_var}\n{COMMAND[FLOAT]} {new_retval_var} {term_retval_var} {new_factor}"
+                return generated_code, new_retval_var
+
+        # term is int factor is float, need to cast
+        elif (term_retval_var.startswith(INT_VAR) or is_integer(term_retval_var)) and (
+            factor_retval_var.startswith(FLOAT_VAR) or is_float(factor_retval_var)
+        ):
             new_retval_var = (
                 self.variable_generator.get_new_float_variable()
             )  # make sure variable is new
             if is_integer(term_retval_var):
                 term_retval_var += ".0"
-                generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {expression_retval_var} {term_retval_var}"
+                generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {term_retval_var} {factor_retval_var}"
                 return generated_code, new_retval_var
             else:
                 new_term = self.variable_generator.get_new_float_variable()
-                generated_code += f"ITOR {new_term} {term_retval_var}\n{COMMAND[FLOAT]} {new_retval_var} {expression_retval_var} {new_term}"
-                return generated_code, new_retval_var
-
-        # expression is int term is float, need to cast
-        elif (
-            expression_retval_var.startswith(INT_VAR)
-            or is_integer(expression_retval_var)
-        ) and (term_retval_var.startswith(FLOAT_VAR) or is_float(term_retval_var)):
-            new_retval_var = (
-                self.variable_generator.get_new_float_variable()
-            )  # make sure variable is new
-            if is_integer(expression_retval_var):
-                expression_retval_var += ".0"
-                generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {expression_retval_var} {term_retval_var}"
-                return generated_code, new_retval_var
-            else:
-                new_expression = self.variable_generator.get_new_float_variable()
-                generated_code += f"ITOR {new_expression} {expression_retval_var}\n{COMMAND[FLOAT]} {new_retval_var} {new_expression} {term_retval_var}"
+                generated_code += f"ITOR {new_term} {term_retval_var}\n{COMMAND[FLOAT]} {new_retval_var} {new_term} {factor_retval_var}"
                 return generated_code, new_retval_var
 
 
