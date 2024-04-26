@@ -76,7 +76,7 @@ class CpqLexer(Lexer):
 
     # more tokens
     CAST = r"(static_cast<int>)|(static_cast<float>)"
-    NUM = r"[0-9]+|([0-9]+\.[0-9]*)"
+    NUM = r"([0-9]+\.[0-9]*)|[0-9]+"
     ID = r"[a-zA-Z]([a-zA-Z]|[0-9])*"
     ADDOP = r"[+-]"
     MULOP = r"[*/]"

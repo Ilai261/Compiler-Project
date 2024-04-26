@@ -20,17 +20,15 @@ class SymbolTable:
         if variable_name not in self.table.keys():
             self.table[variable_name] = variable_type
 
-    def variable_in_table(self, variable_name):
-        return self.table[variable_name]
+    def has_variable(self, variable_name):
+        return variable_name in self.table.keys()
 
     # also checks if variable exists - if it doesn't returns False and None
     def get_variable_type(self, variable_name):
         try:
             return self.table[variable_name]
         except Exception:
-            error_print(
-                f"Error: variable {variable_name} was not found while parsing in the symbol_table..."
-            )
+            return False
 
     def change_variable_type(self, variable_name, variable_type):
         if not variable_name in self.table.keys():

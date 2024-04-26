@@ -3,7 +3,7 @@ from cpq_lexer import CpqLexer
 from parser_classes import CodeConstruct
 from sly import Parser
 from symbol_table import SymbolTable
-from utils import FLOAT, INT
+from utils import FLOAT, INT, error_print
 
 
 class CpqParser(Parser):
@@ -11,17 +11,14 @@ class CpqParser(Parser):
 
     @_("declarations stmt_block")
     def program(self, p):
-        print("hey!")
-        generated_code = (
-            p.declarations.generated_code + "\n" + p.stmt_block.generated_code
-        )
+        generated_code = p.declarations.generated_code + p.stmt_block.generated_code
         return CodeConstruct(generated_code=generated_code)
 
     @_("declarations declaration")
     def declarations(self, p):
         return CodeConstruct(
             generated_code=(
-                p.declarations.generated_code + "\n" + p.declaration.generated_code
+                p.declarations.generated_code + p.declaration.generated_code
             )
         )
 
@@ -72,6 +69,14 @@ class CpqParser(Parser):
 
     @_("ID ASSIGN expression SEMICOLON")
     def assignment_stmt(self, p):
+        if p.expression.retval_var is None:  # then we have an error in expression
+            return CodeConstruct(generated_code="", retval_var=None)
+
+        if self.symbol_table.get_variable_type(p.ID) is None:
+            error_print(
+                f"error in assignment stmt on line {p.lineno}, tried to assign to non declared variable!.."
+            )
+            return CodeConstruct(generated_code="")
         expression: CodeConstruct = p.expression
         retval_var = expression.retval_var
         generated_code = self.code_generator.generate_assignment_stmt(
@@ -79,14 +84,26 @@ class CpqParser(Parser):
             id=p.ID,
             expression_var=retval_var,
         )
+        if generated_code == False:
+            error_print(
+                f"error in assignment stmt on line {p.lineno}, tried to assign float to int!.."
+            )
+            generated_code = ""
         return CodeConstruct(generated_code=generated_code)
 
     @_("INPUT LPAREN ID RPAREN SEMICOLON")
     def input_stmt(self, p):
+        if self.symbol_table.get_variable_type(p.ID) is None:
+            error_print(
+                f"error in input stmt on line {p.lineno}, tried to get input into a non declared variable!.."
+            )
+            return CodeConstruct(generated_code="")
         return ""
 
     @_("OUTPUT LPAREN expression RPAREN SEMICOLON")
     def output_stmt(self, p):
+        if p.expression.retval_var is None:  # then we have an error in expression
+            return CodeConstruct(generated_code="", retval_var=None)
         return ""
 
     @_("IF LPAREN boolexpr RPAREN stmt ELSE stmt")
@@ -116,18 +133,15 @@ class CpqParser(Parser):
 
     @_("LBRACES stmtlist RBRACES")
     def stmt_block(self, p):
-        print("hey!")
         return p.stmtlist
 
     @_("stmtlist stmt")
     def stmtlist(self, p):
-        print("hey!")
         generated_code = p.stmtlist.generated_code + "\n" + p.stmt.generated_code
         return CodeConstruct(generated_code=generated_code)
 
     @_("empty")
     def stmtlist(self, p):
-        print("hey!")
         return CodeConstruct(generated_code="")
 
     @_("boolexpr OR boolterm", "boolterm")
@@ -140,10 +154,14 @@ class CpqParser(Parser):
 
     @_("NOT LPAREN boolexpr RPAREN", "expression RELOP expression")
     def boolfactor(self, p):
+        if p.expression.retval_var is None:  # then we have an error in expression
+            return CodeConstruct(generated_code="", retval_var=None)
         return ""
 
     @_("expression ADDOP term")
     def expression(self, p):
+        if p.term.retval_var is None:  # then we have an error in term
+            return CodeConstruct(generated_code="", retval_var=None)
         # take term's last retval and addop it to expression's retval, this is the new expression retval
         expression: CodeConstruct = p.expression
         expression_retval_var = expression.retval_var
@@ -160,10 +178,14 @@ class CpqParser(Parser):
 
     @_("term")
     def expression(self, p):
+        if p.term.retval_var is None:  # then we have an error in term
+            return CodeConstruct(generated_code="", retval_var=None)
         return p.term
 
     @_("term MULOP factor")
     def term(self, p):
+        if p.factor.retval_var is None:  # then we have an error in factor
+            return CodeConstruct(generated_code="", retval_var=None)
         # take factor's last retval and mulop it to term's retval, this is the new term retval
         term: CodeConstruct = p.term
         term_retval_var = term.retval_var
@@ -180,6 +202,8 @@ class CpqParser(Parser):
 
     @_("factor")
     def term(self, p):
+        if p.factor.retval_var is None:  # then we have an error in factor
+            return CodeConstruct(generated_code="", retval_var=None)
         return p.factor
 
     @_("LPAREN expression RPAREN")
@@ -192,6 +216,11 @@ class CpqParser(Parser):
 
     @_("ID")
     def factor(self, p):
+        if self.symbol_table.get_variable_type(p.ID) is None:
+            error_print(
+                f"error on line {p.lineno}, tried to use a non declared variable!.."
+            )
+            return CodeConstruct(generated_code="", retval_var=None)
         return CodeConstruct(generated_code="", retval_var=p.ID)
 
     @_("NUM")

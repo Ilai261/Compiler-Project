@@ -1,7 +1,14 @@
 /* Finding minimum between two numbers */
-a, b: float;
+a, b, tf1: float;
+c: int;
 
 {
-    a = 5 * (30 + 5);
-    b = 8 / 2;
+    b = 5 * 30 + 5;
+    a = b / 2;
+    tf1 = a * b + 5;
+    /*c = 3.0;
+    d = 5;
+    tf1 = x;*/
+
+
 }
