@@ -3,6 +3,12 @@ a, b, tf1: float;
 c: int;
 
 {
+    input(a);
+    input(tf1);
+    output(3);
+    output(7.6);
+    output(a);
+    output(a + b * 3.2 + c);
     b = 5 * 30 + 5;
     a = b / 2;
     tf1 = a * (b + 5);
@@ -13,9 +19,16 @@ c: int;
     c = static_cast<int> (5.8);
     c = static_cast<int> (a + b * c - 5);
     /*c = 5.8;*/
-    if (b - 73.5 * a <= c + 5 * 30)
+    if (!(b - 73.5 * a <= c + 5 * 30) || a > c + 5 && 5 + 3 < 2)
     a = 5;
     else
     a = 7;
+
+    while(a < b + 5)
+    {
+        input(c);
+        c = c + 1;
+        a = c;
+    }
 
 }

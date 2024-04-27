@@ -1,3 +1,4 @@
+import re
 import sys
 
 INT = "int"
@@ -52,6 +53,17 @@ def float_to_int_str(float_str):
     except ValueError:
         print("Error: Input is not a valid float representation.")
         return None
+
+
+def clean_newlines(code: str):
+    # we use regular expressions to replace consecutive \n with single \n, and also remove leading \n
+    code = code.lstrip("\n")
+    cleaned_text = re.sub(r"\n{2,}", "\n", code)
+    return cleaned_text
+
+
+def reparse_output(code: str):
+    return clean_newlines(code) + "\nHALT"
 
 
 if __name__ == "__main__":

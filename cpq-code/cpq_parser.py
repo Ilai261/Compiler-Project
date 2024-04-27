@@ -95,47 +95,70 @@ class CpqParser(Parser):
     @_("INPUT LPAREN ID RPAREN SEMICOLON")
     def input_stmt(self, p):
         if self.symbol_table.get_variable_type(p.ID) is None:
+            self.errors_detected = True
             error_print(
                 f"error in input stmt on line {p.lineno}, tried to get input into a non declared variable!.."
             )
             return CodeConstruct(generated_code="")
-        return ""
+        generated_code = self.code_generator.generate_input_stmt(id=p.ID)
+        return CodeConstruct(generated_code=generated_code)
 
     @_("OUTPUT LPAREN expression RPAREN SEMICOLON")
     def output_stmt(self, p):
         if p.expression.retval_var is None:  # then we have an error in expression
             self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
-        return ""
+        expression: CodeConstruct = p.expression
+        generated_code = self.code_generator.generate_output_stmt(
+            expression_code=expression.generated_code,
+            expression_retval_var=expression.retval_var,
+        )
+        return CodeConstruct(generated_code=generated_code)
 
     @_("IF LPAREN boolexpr RPAREN stmt ELSE stmt")
     def if_stmt(self, p):
         if p.boolexpr.retval_var is None:  # then we have an error in expression
             self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
-        return CodeConstruct(generated_code=p.boolexpr.generated_code)
+        boolexpr: CodeConstruct = p.boolexpr
+        positive_stmt: CodeConstruct = p.stmt0
+        negative_stmt: CodeConstruct = p.stmt1
+        generated_code = self.code_generator.generate_if_stmt(
+            boolexpr_code=boolexpr.generated_code,
+            boolexpr_retval_var=boolexpr.retval_var,
+            positive_stmt_code=positive_stmt.generated_code,
+            negative_stmt_code=negative_stmt.generated_code,
+        )
+        return CodeConstruct(generated_code=generated_code)
 
     @_("WHILE LPAREN boolexpr RPAREN stmt")
     def while_stmt(self, p):
         if p.boolexpr.retval_var is None:  # then we have an error in expression
             self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
-        return ""
+        boolexpr: CodeConstruct = p.boolexpr
+        stmt: CodeConstruct = p.stmt
+        generated_code = self.code_generator.generate_while_stmt(
+            boolexpr_code=boolexpr.generated_code,
+            boolexpr_retval_var=boolexpr.retval_var,
+            stmt_code=stmt.generated_code,
+        )
+        return CodeConstruct(generated_code=generated_code)
 
     ######################## switch and break are ignored
     @_(
         "SWITCH LPAREN expression RPAREN LBRACES caselist DEFAULT COLON stmtlist RBRACES"
     )
     def switch_stmt(self, p):
-        return ""
+        return CodeConstruct(generated_code="")
 
     @_("caselist CASE NUM COLON stmtlist", "empty")
     def caselist(self, p):
-        return ""
+        return CodeConstruct(generated_code="")
 
     @_("BREAK SEMICOLON")
     def break_stmt(self, p):
-        return ""
+        return CodeConstruct(generated_code="")
 
     ######################## switch and break are ignored
 
@@ -159,7 +182,15 @@ class CpqParser(Parser):
         ):  # then we have an error in boolterm or boolfactor
             self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
-        return ""
+        boolexpr: CodeConstruct = p.boolexpr
+        boolterm: CodeConstruct = p.boolterm
+        generated_code, retval_var = self.code_generator.generate_or_boolexpr(
+            boolexpr_code=boolexpr.generated_code,
+            boolexpr_retval_var=boolexpr.retval_var,
+            boolterm_code=boolterm.generated_code,
+            boolterm_retval_var=boolterm.retval_var,
+        )
+        return CodeConstruct(generated_code=generated_code, retval_var=retval_var)
 
     @_("boolterm")
     def boolexpr(self, p):
@@ -171,11 +202,19 @@ class CpqParser(Parser):
     @_("boolterm AND boolfactor")
     def boolterm(self, p):
         if (
-            p.boolfactor.retval_var is None or p.boolterm.retval_var is None
+            p.boolterm.retval_var is None or p.boolfactor.retval_var is None
         ):  # then we have an error in boolterm or boolfactor
             self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
-        return ""
+        boolterm: CodeConstruct = p.boolterm
+        boolfactor: CodeConstruct = p.boolfactor
+        generated_code, retval_var = self.code_generator.generate_and_boolterm(
+            boolterm_code=boolterm.generated_code,
+            boolterm_retval_var=boolterm.retval_var,
+            boolfactor_code=boolfactor.generated_code,
+            boolfactor_retval_var=boolfactor.retval_var,
+        )
+        return CodeConstruct(generated_code=generated_code, retval_var=retval_var)
 
     @_("boolfactor")
     def boolterm(self, p):
@@ -189,7 +228,12 @@ class CpqParser(Parser):
         if p.boolexpr.retval_var is None:  # then we have an error in boolexpr
             self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
-        return ""
+        boolexpr: CodeConstruct = p.boolexpr
+        generated_code, retval_var = self.code_generator.generate_not_boolfactor(
+            boolexpr_code=boolexpr.generated_code,
+            boolexpr_retval_var=boolexpr.retval_var,
+        )
+        return CodeConstruct(generated_code=generated_code, retval_var=retval_var)
 
     @_("expression RELOP expression")
     def boolfactor(self, p):

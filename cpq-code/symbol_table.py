@@ -23,12 +23,12 @@ class SymbolTable:
     def has_variable(self, variable_name):
         return variable_name in self.table.keys()
 
-    # also checks if variable exists - if it doesn't returns False and None
+    # also checks if variable exists - if it doesn't returns None
     def get_variable_type(self, variable_name):
         try:
             return self.table[variable_name]
         except Exception:
-            return False
+            return None
 
     def change_variable_type(self, variable_name, variable_type):
         if not variable_name in self.table.keys():

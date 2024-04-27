@@ -2,7 +2,7 @@ from cpq_lexer import CpqLexer
 from cpq_parser import CpqParser
 from parser_classes import CodeConstruct
 from symbol_table import SymbolTable
-from utils import error_print, legal_filename
+from utils import error_print, legal_filename, reparse_output
 
 PARSING_ERROR_MSG = "A runtime error occured while trying to parse your file..."
 
@@ -19,17 +19,19 @@ class Compiler:
             error_print("error: filename doesn't have .ou at the end of it...")
             raise Exception
         with open(filename, "r") as file:
-            # try:
-            input_text = file.read()
-            for tok in self.lexer.tokenize(input_text):
-                print("type=%r, value=%r" % (tok.type, tok.value))
-            result: CodeConstruct = self.parser.parse(self.lexer.tokenize(input_text))
-            # for now we print the code, will check print variable, reparse the code and create a file soon
-            print(
-                f"The code generated is:\n{result.generated_code}"
-            )  # needs to change to '.generated_code'
-            print(f"symbol table: {self.symbol_table.table}")
-            # after we print the new code to the file, we need to add a signature line at the end
-        # except Exception as e:
-        #     print(type(e).__name__, "–", e)
-        #     error_print(f"error: Compilation failed: {PARSING_ERROR_MSG}")
+            try:
+                input_text = file.read()
+                for tok in self.lexer.tokenize(input_text):
+                    print("type=%r, value=%r" % (tok.type, tok.value))
+                result: CodeConstruct = self.parser.parse(
+                    self.lexer.tokenize(input_text)
+                )
+                # for now we print the code, will check print variable, reparse the code and create a file soon
+                print(
+                    f"The code generated is:\n{reparse_output(result.generated_code)}"
+                )
+
+                # after we print the new code to the file, we need to add a signature line at the end
+            except Exception as e:
+                print(type(e).__name__, "–", e)
+                error_print(f"error: Compilation failed: {PARSING_ERROR_MSG}")
