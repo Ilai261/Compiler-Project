@@ -8,6 +8,12 @@ MULTIPLY = "*"
 DIVIDE = "/"
 INT_CAST = "static_cast<int>"
 FLOAT_CAST = "static_cast<float>"
+RELOP_EQUALS = "=="
+RELOP_NOT_EQUALS = "!="
+RELOP_GREATER_THAN_OR_EQUALS = ">="
+RELOP_LESS_THAN_OR_EQUALS = "<="
+RELOP_REALLY_GREATER_THAN = ">"
+RELOP_REALLY_LESS_THAN = "<"
 
 
 def error_print(*args, **kwargs):

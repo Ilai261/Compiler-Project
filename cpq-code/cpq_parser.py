@@ -104,15 +104,22 @@ class CpqParser(Parser):
     @_("OUTPUT LPAREN expression RPAREN SEMICOLON")
     def output_stmt(self, p):
         if p.expression.retval_var is None:  # then we have an error in expression
+            self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
         return ""
 
     @_("IF LPAREN boolexpr RPAREN stmt ELSE stmt")
     def if_stmt(self, p):
-        return ""
+        if p.boolexpr.retval_var is None:  # then we have an error in expression
+            self.errors_detected = True
+            return CodeConstruct(generated_code="", retval_var=None)
+        return CodeConstruct(generated_code=p.boolexpr.generated_code)
 
     @_("WHILE LPAREN boolexpr RPAREN stmt")
     def while_stmt(self, p):
+        if p.boolexpr.retval_var is None:  # then we have an error in expression
+            self.errors_detected = True
+            return CodeConstruct(generated_code="", retval_var=None)
         return ""
 
     ######################## switch and break are ignored
@@ -145,23 +152,69 @@ class CpqParser(Parser):
     def stmtlist(self, p):
         return CodeConstruct(generated_code="")
 
-    @_("boolexpr OR boolterm", "boolterm")
+    @_("boolexpr OR boolterm")
     def boolexpr(self, p):
-        return ""
-
-    @_("boolterm AND boolfactor", "boolfactor")
-    def boolterm(self, p):
-        return ""
-
-    @_("NOT LPAREN boolexpr RPAREN", "expression RELOP expression")
-    def boolfactor(self, p):
-        if p.expression.retval_var is None:  # then we have an error in expression
+        if (
+            p.boolexpr.retval_var is None or p.boolterm.retval_var is None
+        ):  # then we have an error in boolterm or boolfactor
+            self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
         return ""
 
+    @_("boolterm")
+    def boolexpr(self, p):
+        if p.boolterm.retval_var is None:  # then we have an error in boolexpr
+            self.errors_detected = True
+            return CodeConstruct(generated_code="", retval_var=None)
+        return p.boolterm
+
+    @_("boolterm AND boolfactor")
+    def boolterm(self, p):
+        if (
+            p.boolfactor.retval_var is None or p.boolterm.retval_var is None
+        ):  # then we have an error in boolterm or boolfactor
+            self.errors_detected = True
+            return CodeConstruct(generated_code="", retval_var=None)
+        return ""
+
+    @_("boolfactor")
+    def boolterm(self, p):
+        if p.boolfactor.retval_var is None:  # then we have an error in boolfactor
+            self.errors_detected = True
+            return CodeConstruct(generated_code="", retval_var=None)
+        return p.boolfactor
+
+    @_("NOT LPAREN boolexpr RPAREN")
+    def boolfactor(self, p):
+        if p.boolexpr.retval_var is None:  # then we have an error in boolexpr
+            self.errors_detected = True
+            return CodeConstruct(generated_code="", retval_var=None)
+        return ""
+
+    @_("expression RELOP expression")
+    def boolfactor(self, p):
+        if (
+            p.expression0.retval_var is None or p.expression1.retval_var is None
+        ):  # then we have an error in expression
+            self.errors_detected = True
+            return CodeConstruct(generated_code="", retval_var=None)
+        expression1: CodeConstruct = p.expression0
+        expression2: CodeConstruct = p.expression1
+        generated_code, retval_var = self.code_generator.generate_relop_boolfactor(
+            expression1_code=expression1.generated_code,
+            expression1_retval_var=expression1.retval_var,
+            relop=p.RELOP,
+            expression2_code=expression2.generated_code,
+            expression2_retval_var=expression2.retval_var,
+        )
+        return CodeConstruct(generated_code=generated_code, retval_var=retval_var)
+
     @_("expression ADDOP term")
     def expression(self, p):
-        if p.term.retval_var is None:  # then we have an error in term
+        if (
+            p.term.retval_var is None or p.expression.retval_var is None
+        ):  # then we have an error in term or expression
+            self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
         # take term's last retval and addop it to expression's retval, this is the new expression retval
         expression: CodeConstruct = p.expression
@@ -178,12 +231,16 @@ class CpqParser(Parser):
     @_("term")
     def expression(self, p):
         if p.term.retval_var is None:  # then we have an error in term
+            self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
         return p.term
 
     @_("term MULOP factor")
     def term(self, p):
-        if p.factor.retval_var is None:  # then we have an error in factor
+        if (
+            p.factor.retval_var is None or p.term.retval_var is None
+        ):  # then we have an error in factor or term
+            self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
         # take factor's last retval and mulop it to term's retval, this is the new term retval
         term: CodeConstruct = p.term
@@ -200,15 +257,22 @@ class CpqParser(Parser):
     @_("factor")
     def term(self, p):
         if p.factor.retval_var is None:  # then we have an error in factor
+            self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
         return p.factor
 
     @_("LPAREN expression RPAREN")
     def factor(self, p):
+        if p.expression.retval_var is None:  # then we have an error in expression
+            self.errors_detected = True
+            return CodeConstruct(generated_code="", retval_var=None)
         return p.expression
 
     @_("CAST LPAREN expression RPAREN")
     def factor(self, p):
+        if p.expression.retval_var is None:  # then we have an error in expression
+            self.errors_detected = True
+            return CodeConstruct(generated_code="", retval_var=None)
         expression: CodeConstruct = p.expression
         # we cast the expression into a new variable
         generated_code, retval_var = self.code_generator.generate_casting_factor(
@@ -224,6 +288,7 @@ class CpqParser(Parser):
             error_print(
                 f"error on line {p.lineno}, tried to use a non declared variable!.."
             )
+            self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
         return CodeConstruct(generated_code="", retval_var=p.ID)
 

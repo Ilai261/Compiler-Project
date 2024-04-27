@@ -13,5 +13,9 @@ c: int;
     c = static_cast<int> (5.8);
     c = static_cast<int> (a + b * c - 5);
     /*c = 5.8;*/
+    if (b - 73.5 * a <= c + 5 * 30)
+    a = 5;
+    else
+    a = 7;
 
 }

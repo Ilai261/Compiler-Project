@@ -8,6 +8,12 @@ from utils import (
     MINUS,
     MULTIPLY,
     PLUS,
+    RELOP_EQUALS,
+    RELOP_GREATER_THAN_OR_EQUALS,
+    RELOP_LESS_THAN_OR_EQUALS,
+    RELOP_NOT_EQUALS,
+    RELOP_REALLY_GREATER_THAN,
+    RELOP_REALLY_LESS_THAN,
     error_print,
     float_to_int_str,
     is_float,
@@ -230,6 +236,136 @@ class CodeGenerator:
                     f"{COMMAND} {new_expression_retval_var} {expression_retval_var}"
                 )
                 return generated_code, new_expression_retval_var
+
+    def generate_relop_boolfactor(
+        self,
+        expression1_code,
+        expression1_retval_var,
+        relop,
+        expression2_code,
+        expression2_retval_var,
+    ):
+        generated_code = ""
+        if expression1_code != "":
+            generated_code += f"{expression1_code}\n"
+        if expression2_code != "":
+            generated_code += f"{expression2_code}\n"
+        if relop == RELOP_EQUALS:
+            COMMAND = {INT: "IEQL", FLOAT: "REQL"}
+        elif relop == RELOP_NOT_EQUALS:
+            COMMAND = {INT: "INQL", FLOAT: "RNQL"}
+        elif relop == RELOP_GREATER_THAN_OR_EQUALS:
+            COMMAND = {INT: "IGRT", FLOAT: "RGRT"}
+            COMMAND1 = {INT: "IEQL", FLOAT: "REQL"}
+        elif relop == RELOP_LESS_THAN_OR_EQUALS:
+            COMMAND = {INT: "ILSS", FLOAT: "RLSS"}
+            COMMAND1 = {INT: "IEQL", FLOAT: "REQL"}
+        elif relop == RELOP_REALLY_GREATER_THAN:
+            COMMAND = {INT: "IGRT", FLOAT: "RGRT"}
+        else:
+            COMMAND = {INT: "ILSS", FLOAT: "RLSS"}
+
+        # both are integers
+        if (
+            self.is_variable_integer(expression1_retval_var)
+        ) and self.is_variable_integer(expression2_retval_var):
+            new_retval_var = (
+                self.variable_generator.get_new_int_variable()
+            )  # make sure variable is new
+            if (
+                relop == RELOP_GREATER_THAN_OR_EQUALS
+                or relop == RELOP_LESS_THAN_OR_EQUALS
+            ):
+                new_retval_var2 = self.variable_generator.get_new_int_variable()
+                new_retval_var3 = self.variable_generator.get_new_int_variable()
+                new_retval_var4 = self.variable_generator.get_new_int_variable()
+                generated_code += f"""{COMMAND[INT]} {new_retval_var} {expression1_retval_var} {expression2_retval_var}\n\
+{COMMAND1[INT]} {new_retval_var2} {expression1_retval_var} {expression2_retval_var}\n\
+IADD {new_retval_var3} {new_retval_var} {new_retval_var2}\n\
+IGRT {new_retval_var4} {new_retval_var3} 0"""
+                return generated_code, new_retval_var4
+            else:
+                generated_code += f"{COMMAND[INT]} {new_retval_var} {expression1_retval_var} {expression2_retval_var}"
+                return generated_code, new_retval_var
+
+        # both are floats
+        elif (
+            self.is_variable_float(expression1_retval_var)
+        ) and self.is_variable_float(expression2_retval_var):
+            new_retval_var = (
+                self.variable_generator.get_new_int_variable()
+            )  # make sure variable is new
+            if (
+                relop == RELOP_GREATER_THAN_OR_EQUALS
+                or relop == RELOP_LESS_THAN_OR_EQUALS
+            ):
+                new_retval_var2 = self.variable_generator.get_new_int_variable()
+                new_retval_var3 = self.variable_generator.get_new_int_variable()
+                new_retval_var4 = self.variable_generator.get_new_int_variable()
+                generated_code += f"""{COMMAND[FLOAT]} {new_retval_var} {expression1_retval_var} {expression2_retval_var}\n\
+{COMMAND1[FLOAT]} {new_retval_var2} {expression1_retval_var} {expression2_retval_var}\n\
+IADD {new_retval_var3} {new_retval_var} {new_retval_var2}\n\
+IGRT {new_retval_var4} {new_retval_var3} 0"""
+                return generated_code, new_retval_var4
+            else:
+                generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {expression1_retval_var} {expression2_retval_var}"
+                return generated_code, new_retval_var
+
+        # expression1 is float expression2 is int, need to cast
+        elif (
+            self.is_variable_float(expression1_retval_var)
+        ) and self.is_variable_integer(expression2_retval_var):
+            new_retval_var = (
+                self.variable_generator.get_new_int_variable()
+            )  # make sure variable is new
+            if is_integer(expression2_retval_var):
+                expression2_retval_var += ".0"
+            else:
+                new_expression2 = self.variable_generator.get_new_float_variable()
+                generated_code += f"ITOR {new_expression2} {expression2_retval_var}\n"
+            if (
+                relop == RELOP_GREATER_THAN_OR_EQUALS
+                or relop == RELOP_LESS_THAN_OR_EQUALS
+            ):
+                new_retval_var2 = self.variable_generator.get_new_int_variable()
+                new_retval_var3 = self.variable_generator.get_new_int_variable()
+                new_retval_var4 = self.variable_generator.get_new_int_variable()
+                generated_code += f"""{COMMAND[FLOAT]} {new_retval_var} {expression1_retval_var} {new_expression2}\n\
+{COMMAND1[FLOAT]} {new_retval_var2} {expression1_retval_var} {new_expression2}\n\
+IADD {new_retval_var3} {new_retval_var} {new_retval_var2}\n\
+IGRT {new_retval_var4} {new_retval_var3} 0"""
+                return generated_code, new_retval_var4
+            else:
+                generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {expression1_retval_var} {new_expression2}"
+                return generated_code, new_retval_var
+
+        # expression1 is int expression2 is float, need to cast
+        elif (
+            self.is_variable_integer(expression1_retval_var)
+        ) and self.is_variable_float(expression2_retval_var):
+            new_retval_var = (
+                self.variable_generator.get_new_int_variable()
+            )  # make sure variable is new
+            if is_integer(expression1_retval_var):
+                expression1_retval_var += ".0"
+            else:
+                new_expression1 = self.variable_generator.get_new_float_variable()
+                generated_code += f"ITOR {new_expression1} {expression1_retval_var}\n"
+            if (
+                relop == RELOP_GREATER_THAN_OR_EQUALS
+                or relop == RELOP_LESS_THAN_OR_EQUALS
+            ):
+                new_retval_var2 = self.variable_generator.get_new_int_variable()
+                new_retval_var3 = self.variable_generator.get_new_int_variable()
+                new_retval_var4 = self.variable_generator.get_new_int_variable()
+                generated_code += f"""{COMMAND[FLOAT]} {new_retval_var} {expression1_retval_var} {new_expression1}\n\
+{COMMAND1[FLOAT]} {new_retval_var2} {expression1_retval_var} {new_expression1}\n\
+IADD {new_retval_var3} {new_retval_var} {new_retval_var2}\n\
+IGRT {new_retval_var4} {new_retval_var3} 0"""
+                return generated_code, new_retval_var4
+            else:
+                generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {expression1_retval_var} {new_expression1}"
+                return generated_code, new_retval_var
 
 
 class VariableGenerator:
