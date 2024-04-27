@@ -5,10 +5,13 @@ c: int;
 {
     b = 5 * 30 + 5;
     a = b / 2;
-    tf1 = a * b + 5;
+    tf1 = a * (b + 5);
     /*c = 3.0;
     d = 5;
     tf1 = x;*/
-
+    c = static_cast<int> (b);
+    c = static_cast<int> (5.8);
+    c = static_cast<int> (a + b * c - 5);
+    /*c = 5.8;*/
 
 }

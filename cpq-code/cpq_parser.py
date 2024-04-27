@@ -70,21 +70,22 @@ class CpqParser(Parser):
     @_("ID ASSIGN expression SEMICOLON")
     def assignment_stmt(self, p):
         if p.expression.retval_var is None:  # then we have an error in expression
+            self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
-
         if self.symbol_table.get_variable_type(p.ID) is None:
+            self.errors_detected = True
             error_print(
                 f"error in assignment stmt on line {p.lineno}, tried to assign to non declared variable!.."
             )
             return CodeConstruct(generated_code="")
         expression: CodeConstruct = p.expression
-        retval_var = expression.retval_var
         generated_code = self.code_generator.generate_assignment_stmt(
             expression_code=expression.generated_code,
             id=p.ID,
-            expression_var=retval_var,
+            expression_var=expression.retval_var,
         )
         if generated_code == False:
+            self.errors_detected = True
             error_print(
                 f"error in assignment stmt on line {p.lineno}, tried to assign float to int!.."
             )
@@ -164,15 +165,13 @@ class CpqParser(Parser):
             return CodeConstruct(generated_code="", retval_var=None)
         # take term's last retval and addop it to expression's retval, this is the new expression retval
         expression: CodeConstruct = p.expression
-        expression_retval_var = expression.retval_var
         term: CodeConstruct = p.term
-        term_retval_var = term.retval_var
         generated_code, retval_var = self.code_generator.generate_expression(
             expression_code=expression.generated_code,
-            expression_retval_var=expression_retval_var,
+            expression_retval_var=expression.retval_var,
             addop=p.ADDOP,
             term_code=term.generated_code,
-            term_retval_var=term_retval_var,
+            term_retval_var=term.retval_var,
         )
         return CodeConstruct(generated_code=generated_code, retval_var=retval_var)
 
@@ -188,15 +187,13 @@ class CpqParser(Parser):
             return CodeConstruct(generated_code="", retval_var=None)
         # take factor's last retval and mulop it to term's retval, this is the new term retval
         term: CodeConstruct = p.term
-        term_retval_var = term.retval_var
         factor: CodeConstruct = p.factor
-        factor_retval_var = factor.retval_var
         generated_code, retval_var = self.code_generator.generate_term(
             term_code=term.generated_code,
-            term_retval_var=term_retval_var,
+            term_retval_var=term.retval_var,
             mulop=p.MULOP,
             factor_code=factor.generated_code,
-            factor_retval_var=factor_retval_var,
+            factor_retval_var=factor.retval_var,
         )
         return CodeConstruct(generated_code=generated_code, retval_var=retval_var)
 
@@ -212,7 +209,14 @@ class CpqParser(Parser):
 
     @_("CAST LPAREN expression RPAREN")
     def factor(self, p):
-        return ""
+        expression: CodeConstruct = p.expression
+        # we cast the expression into a new variable
+        generated_code, retval_var = self.code_generator.generate_casting_factor(
+            expression_code=expression.generated_code,
+            expression_retval_var=expression.retval_var,
+            cast=p.CAST,
+        )
+        return CodeConstruct(generated_code=generated_code, retval_var=retval_var)
 
     @_("ID")
     def factor(self, p):

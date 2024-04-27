@@ -2,11 +2,14 @@ from symbol_table import SymbolTable
 from utils import (
     DIVIDE,
     FLOAT,
+    FLOAT_CAST,
     INT,
+    INT_CAST,
     MINUS,
     MULTIPLY,
     PLUS,
     error_print,
+    float_to_int_str,
     is_float,
     is_integer,
 )
@@ -188,6 +191,45 @@ class CodeGenerator:
                 new_term = self.variable_generator.get_new_float_variable()
                 generated_code += f"ITOR {new_term} {term_retval_var}\n{COMMAND[FLOAT]} {new_retval_var} {new_term} {factor_retval_var}"
                 return generated_code, new_retval_var
+
+    def generate_casting_factor(self, expression_code, expression_retval_var, cast):
+        # if no cast is actually needed
+        if (self.is_variable_integer(expression_retval_var) and cast == INT_CAST) or (
+            self.is_variable_float(expression_retval_var) and cast == FLOAT_CAST
+        ):
+            return expression_code, expression_retval_var
+        generated_code = ""
+        if expression_code != "":
+            generated_code += f"{expression_code}\n"
+        if cast == INT_CAST:
+            COMMAND = "RTOI"
+        else:
+            COMMAND = "ITOR"
+
+        if self.is_variable_integer(expression_retval_var) and cast == FLOAT_CAST:
+            if is_integer(expression_retval_var):
+                expression_retval_var += ".0"
+                return generated_code, expression_retval_var
+            else:
+                new_expression_retval_var = (
+                    self.variable_generator.get_new_float_variable()
+                )
+                generated_code += (
+                    f"{COMMAND} {new_expression_retval_var} {expression_retval_var}"
+                )
+                return generated_code, new_expression_retval_var
+        else:
+            if is_float(expression_retval_var):
+                expression_retval_var = float_to_int_str(expression_retval_var)
+                return generated_code, expression_retval_var
+            else:
+                new_expression_retval_var = (
+                    self.variable_generator.get_new_int_variable()
+                )
+                generated_code += (
+                    f"{COMMAND} {new_expression_retval_var} {expression_retval_var}"
+                )
+                return generated_code, new_expression_retval_var
 
 
 class VariableGenerator:
