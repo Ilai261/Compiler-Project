@@ -1,5 +1,5 @@
 """ Written by Ilai Azaria, 327650255
-    This class takes care of generating code for the parser in real-time
+    This module takes care of generating code for the parser in real-time
 """
 
 from symbol_table import SymbolTable

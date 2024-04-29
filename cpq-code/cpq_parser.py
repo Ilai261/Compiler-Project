@@ -1,3 +1,7 @@
+""" Written by Ilai Azaria, 327650255
+    This module defines the Parser class for the compiler's syntactic analysis 
+"""
+
 from code_generator import CodeGenerator
 from cpq_lexer import CpqLexer
 from parser_classes import CodeConstruct

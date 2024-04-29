@@ -1,3 +1,7 @@
+""" Written by Ilai Azaria, 327650255
+    This module defines the Compiler class 
+"""
+
 from cpq_lexer import CpqLexer
 from cpq_parser import CpqParser
 from parser_classes import CodeConstruct

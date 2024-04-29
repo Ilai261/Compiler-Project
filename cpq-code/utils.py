@@ -1,3 +1,7 @@
+""" Written by Ilai Azaria, 327650255
+    This is an utility module
+"""
+
 import re
 import sys
 

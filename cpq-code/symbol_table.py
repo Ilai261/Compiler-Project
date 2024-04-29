@@ -1,3 +1,7 @@
+""" Written by Ilai Azaria, 327650255
+    This module defines the compiler's symbol table
+"""
+
 from utils import error_print
 
 INT = "int"
@@ -7,7 +11,7 @@ FLOAT = "float"
 class SymbolTable:
     def __init__(self):
         self.table: dict[str:str] = {}  # we save each variable's name and type
-        self.curly_braces_nesting_level = 0
+        self.curly_braces_nesting_level = 0  # for syntactic errors
 
     def __str__(self) -> str:
         table = "The symbol table:\n----------------------------\n"

@@ -1,3 +1,7 @@
+""" Written by Ilai Azaria, 327650255
+    This module defines the Lexer class for the compiler's lexical analysis 
+"""
+
 import re
 
 from sly import Lexer

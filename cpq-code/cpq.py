@@ -1,3 +1,7 @@
+""" Written by Ilai Azaria, 327650255
+    This is the main module for running the compiler
+"""
+
 import sys
 
 sys.path.insert(0, "sly-master\\src\\")
