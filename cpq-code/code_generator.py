@@ -1,11 +1,15 @@
+""" Written by Ilai Azaria, 327650255
+    This class takes care of generating code for the parser in real-time
+"""
+
 from symbol_table import SymbolTable
 from utils import (
-    DIVIDE,
     FLOAT,
     FLOAT_CAST,
+    FLOAT_VAR,
     INT,
     INT_CAST,
-    MINUS,
+    INT_VAR,
     MULTIPLY,
     PLUS,
     RELOP_EQUALS,
@@ -13,15 +17,10 @@ from utils import (
     RELOP_LESS_THAN_OR_EQUALS,
     RELOP_NOT_EQUALS,
     RELOP_REALLY_GREATER_THAN,
-    RELOP_REALLY_LESS_THAN,
-    error_print,
     float_to_int_str,
     is_float,
     is_integer,
 )
-
-INT_VAR = "ti"
-FLOAT_VAR = "tf"
 
 
 class CodeGenerator:
@@ -95,29 +94,32 @@ class CodeGenerator:
     ):
         positive_label = self.label_generator.get_new_label()
         negative_label = self.label_generator.get_new_label()
-        generated_code = f"""{boolexpr_code}\nJMPZ {negative_label} {boolexpr_retval_var}\n{positive_stmt_code}\n\
-JUMP {positive_label}\n{negative_label}:\n{negative_stmt_code}\n{positive_label}:"""
-        return generated_code
+        return self.generate_if_code(
+            boolexpr_code,
+            boolexpr_retval_var,
+            positive_stmt_code,
+            negative_stmt_code,
+            positive_label,
+            negative_label,
+        )
 
     def generate_while_stmt(self, boolexpr_code, boolexpr_retval_var, stmt_code):
         while_entry_label = self.label_generator.get_new_label()
         while_exit_label = self.label_generator.get_new_label()
-        generated_code = f"""{while_entry_label}:\n{boolexpr_code}\nJMPZ {while_exit_label} {boolexpr_retval_var}\n\
-{stmt_code}\nJUMP {while_entry_label}\n{while_exit_label}:"""
-        return generated_code
+        return self.generate_while_code(
+            boolexpr_code,
+            boolexpr_retval_var,
+            stmt_code,
+            while_entry_label,
+            while_exit_label,
+        )
 
     def generate_expression(
         self, expression_code, expression_retval_var, addop, term_code, term_retval_var
     ):
-        generated_code = ""
-        if expression_code != "":
-            generated_code += f"{expression_code}\n"
-        if term_code != "":
-            generated_code += f"{term_code}\n"
-        if addop == PLUS:
-            COMMAND = {INT: "IADD", FLOAT: "RADD"}
-        else:
-            COMMAND = {INT: "ISUB", FLOAT: "RSUB"}
+        generated_code, COMMAND = self.initialize_code_and_command_expression(
+            expression_code, addop, term_code
+        )
 
         # both are integers
         if (
@@ -174,15 +176,9 @@ JUMP {positive_label}\n{negative_label}:\n{negative_stmt_code}\n{positive_label}
     def generate_term(
         self, term_code, term_retval_var, mulop, factor_code, factor_retval_var
     ):
-        generated_code = ""
-        if term_code != "":
-            generated_code += f"{term_code}\n"
-        if factor_code != "":
-            generated_code += f"{factor_code}\n"
-        if mulop == MULTIPLY:
-            COMMAND = {INT: "IMLT", FLOAT: "RMLT"}
-        else:
-            COMMAND = {INT: "IDIV", FLOAT: "RDIV"}
+        generated_code, COMMAND = self.initialize_code_and_command_term(
+            term_code, mulop, factor_code
+        )
 
         # both are integers
         if self.is_variable_integer(term_retval_var) and (
@@ -244,13 +240,9 @@ JUMP {positive_label}\n{negative_label}:\n{negative_stmt_code}\n{positive_label}
             self.is_variable_float(expression_retval_var) and cast == FLOAT_CAST
         ):
             return expression_code, expression_retval_var
-        generated_code = ""
-        if expression_code != "":
-            generated_code += f"{expression_code}\n"
-        if cast == INT_CAST:
-            COMMAND = "RTOI"
-        else:
-            COMMAND = "ITOR"
+        generated_code, COMMAND = self.initialize_code_and_command_casting_factor(
+            expression_code, cast
+        )
 
         if self.is_variable_integer(expression_retval_var) and cast == FLOAT_CAST:
             if is_integer(expression_retval_var):
@@ -285,25 +277,11 @@ JUMP {positive_label}\n{negative_label}:\n{negative_stmt_code}\n{positive_label}
         expression2_code,
         expression2_retval_var,
     ):
-        generated_code = ""
-        if expression1_code != "":
-            generated_code += f"{expression1_code}\n"
-        if expression2_code != "":
-            generated_code += f"{expression2_code}\n"
-        if relop == RELOP_EQUALS:
-            COMMAND = {INT: "IEQL", FLOAT: "REQL"}
-        elif relop == RELOP_NOT_EQUALS:
-            COMMAND = {INT: "INQL", FLOAT: "RNQL"}
-        elif relop == RELOP_GREATER_THAN_OR_EQUALS:
-            COMMAND = {INT: "IGRT", FLOAT: "RGRT"}
-            COMMAND1 = {INT: "IEQL", FLOAT: "REQL"}
-        elif relop == RELOP_LESS_THAN_OR_EQUALS:
-            COMMAND = {INT: "ILSS", FLOAT: "RLSS"}
-            COMMAND1 = {INT: "IEQL", FLOAT: "REQL"}
-        elif relop == RELOP_REALLY_GREATER_THAN:
-            COMMAND = {INT: "IGRT", FLOAT: "RGRT"}
-        else:
-            COMMAND = {INT: "ILSS", FLOAT: "RLSS"}
+        generated_code, COMMAND, COMMAND1 = (
+            self.initialize_code_and_command_relop_boolfactor(
+                expression1_code, relop, expression2_code
+            )
+        )
 
         # both are integers
         if (
@@ -360,6 +338,7 @@ IGRT {new_retval_var4} {new_retval_var3} 0"""
             )  # make sure variable is new
             if is_integer(expression2_retval_var):
                 expression2_retval_var += ".0"
+                new_expression2 = expression2_retval_var
             else:
                 new_expression2 = self.variable_generator.get_new_float_variable()
                 generated_code += f"ITOR {new_expression2} {expression2_retval_var}\n"
@@ -388,6 +367,7 @@ IGRT {new_retval_var4} {new_retval_var3} 0"""
             )  # make sure variable is new
             if is_integer(expression1_retval_var):
                 expression1_retval_var += ".0"
+                new_expression1 = expression1_retval_var
             else:
                 new_expression1 = self.variable_generator.get_new_float_variable()
                 generated_code += f"ITOR {new_expression1} {expression1_retval_var}\n"
@@ -398,13 +378,13 @@ IGRT {new_retval_var4} {new_retval_var3} 0"""
                 new_retval_var2 = self.variable_generator.get_new_int_variable()
                 new_retval_var3 = self.variable_generator.get_new_int_variable()
                 new_retval_var4 = self.variable_generator.get_new_int_variable()
-                generated_code += f"""{COMMAND[FLOAT]} {new_retval_var} {expression1_retval_var} {new_expression1}\n\
-{COMMAND1[FLOAT]} {new_retval_var2} {expression1_retval_var} {new_expression1}\n\
+                generated_code += f"""{COMMAND[FLOAT]} {new_retval_var} {new_expression1} {expression2_retval_var}\n\
+{COMMAND1[FLOAT]} {new_retval_var2} {new_expression1} {expression2_retval_var}\n\
 IADD {new_retval_var3} {new_retval_var} {new_retval_var2}\n\
 IGRT {new_retval_var4} {new_retval_var3} 0"""
                 return generated_code, new_retval_var4
             else:
-                generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {expression1_retval_var} {new_expression1}"
+                generated_code += f"{COMMAND[FLOAT]} {new_retval_var} {new_expression1} {expression2_retval_var}"
                 return generated_code, new_retval_var
 
     def generate_not_boolfactor(self, boolexpr_code, boolexpr_retval_var):
@@ -440,6 +420,93 @@ INQL {new_retval_var2} {boolterm_retval_var} 0\n\
 IADD {new_retval_var3} {new_retval_var} {new_retval_var2}\n\
 IGRT {new_retval_var4} {new_retval_var3} 0"""
         return generated_code, new_retval_var4
+
+    #######################################
+
+    def generate_if_code(
+        self,
+        boolexpr_code,
+        boolexpr_retval_var,
+        positive_stmt_code,
+        negative_stmt_code,
+        positive_label,
+        negative_label,
+    ):
+        generated_code = f"""{boolexpr_code}\nJMPZ {negative_label} {boolexpr_retval_var}\n{positive_stmt_code}\n\
+JUMP {positive_label}\n{negative_label}:\n{negative_stmt_code}\n{positive_label}:"""
+        return generated_code
+
+    def generate_while_code(
+        self,
+        boolexpr_code,
+        boolexpr_retval_var,
+        stmt_code,
+        while_entry_label,
+        while_exit_label,
+    ):
+        generated_code = f"""{while_entry_label}:\n{boolexpr_code}\nJMPZ {while_exit_label} {boolexpr_retval_var}\n\
+{stmt_code}\nJUMP {while_entry_label}\n{while_exit_label}:"""
+        return generated_code
+
+    def initialize_code_and_command_expression(self, expression_code, addop, term_code):
+        generated_code = ""
+        if expression_code != "":
+            generated_code += f"{expression_code}\n"
+        if term_code != "":
+            generated_code += f"{term_code}\n"
+        if addop == PLUS:
+            COMMAND = {INT: "IADD", FLOAT: "RADD"}
+        else:
+            COMMAND = {INT: "ISUB", FLOAT: "RSUB"}
+        return generated_code, COMMAND
+
+    def initialize_code_and_command_term(self, term_code, mulop, factor_code):
+        generated_code = ""
+        if term_code != "":
+            generated_code += f"{term_code}\n"
+        if factor_code != "":
+            generated_code += f"{factor_code}\n"
+        if mulop == MULTIPLY:
+            COMMAND = {INT: "IMLT", FLOAT: "RMLT"}
+        else:
+            COMMAND = {INT: "IDIV", FLOAT: "RDIV"}
+        return generated_code, COMMAND
+
+    def initialize_code_and_command_casting_factor(self, expression_code, cast):
+        generated_code = ""
+        if expression_code != "":
+            generated_code += f"{expression_code}\n"
+        if cast == INT_CAST:
+            COMMAND = "RTOI"
+        else:
+            COMMAND = "ITOR"
+        return generated_code, COMMAND
+
+    def initialize_code_and_command_relop_boolfactor(
+        self, expression1_code, relop, expression2_code
+    ):
+        generated_code = ""
+        COMMAND = ""
+        COMMAND1 = ""
+        if expression1_code != "":
+            generated_code += f"{expression1_code}\n"
+        if expression2_code != "":
+            generated_code += f"{expression2_code}\n"
+        if relop == RELOP_EQUALS:
+            COMMAND = {INT: "IEQL", FLOAT: "REQL"}
+        elif relop == RELOP_NOT_EQUALS:
+            COMMAND = {INT: "INQL", FLOAT: "RNQL"}
+        elif relop == RELOP_GREATER_THAN_OR_EQUALS:
+            COMMAND = {INT: "IGRT", FLOAT: "RGRT"}
+            COMMAND1 = {INT: "IEQL", FLOAT: "REQL"}
+        elif relop == RELOP_LESS_THAN_OR_EQUALS:
+            COMMAND = {INT: "ILSS", FLOAT: "RLSS"}
+            COMMAND1 = {INT: "IEQL", FLOAT: "REQL"}
+        elif relop == RELOP_REALLY_GREATER_THAN:
+            COMMAND = {INT: "IGRT", FLOAT: "RGRT"}
+        else:
+            COMMAND = {INT: "ILSS", FLOAT: "RLSS"}
+        return generated_code, COMMAND, COMMAND1
 
 
 class VariableGenerator:

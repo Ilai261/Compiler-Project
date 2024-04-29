@@ -1,0 +1,70 @@
+RINP a
+RINP tf1
+IPRT 3
+RPRT 7.6
+RPRT a
+RMLT tf0 b 3.2
+RADD tf2 a tf0
+ITOR tf4 c
+RADD tf3 tf2 tf4
+RPRT tf3
+IMLT ti0 5 30
+IADD ti1 ti0 5
+ITOR tf5 ti1
+RASN b tf5
+RDIV tf6 b 2.0
+RASN a tf6
+RADD tf7 b 5.0
+RMLT tf8 a tf7
+RASN tf1 tf8
+RTOI ti2 b
+IASN c ti2
+IASN c 5
+ITOR tf10 c
+RMLT tf9 b tf10
+RADD tf11 a tf9
+RSUB tf12 tf11 5.0
+RTOI ti3 tf12
+IASN c ti3
+RMLT tf13 73.5 a
+RSUB tf14 b tf13
+IMLT ti4 5 30
+IADD ti5 c ti4
+ITOR tf15 ti5
+RLSS ti6 tf14 tf15
+REQL ti7 tf14 tf15
+IADD ti8 ti6 ti7
+IGRT ti9 ti8 0
+ISUB ti10 1 ti9
+IADD ti11 c 5
+ITOR tf16 ti11
+RGRT ti12 a tf16
+IADD ti13 5 3
+ILSS ti14 ti13 2
+INQL ti15 ti12 0
+INQL ti16 ti14 0
+IMLT ti17 ti15 ti16
+IGRT ti18 ti17 0
+INQL ti19 ti10 0
+INQL ti20 ti18 0
+IADD ti21 ti19 ti20
+IGRT ti22 ti21 0
+JMPZ L1 ti22
+RASN a 5.0
+JUMP L0
+L1:
+RASN a 7.0
+L0:
+L2:
+RADD tf17 b 5.0
+RLSS ti23 a tf17
+JMPZ L3 ti23
+IINP c
+IADD ti24 c 1
+IASN c ti24
+ITOR tf18 c
+RASN a tf18
+JUMP L2
+L3:
+HALT
+-------Ilai Azaria 327650255-------

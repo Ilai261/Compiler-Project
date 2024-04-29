@@ -3,6 +3,8 @@ import sys
 
 INT = "int"
 FLOAT = "float"
+INT_VAR = "ti"
+FLOAT_VAR = "tf"
 PLUS = "+"
 MINUS = "-"
 MULTIPLY = "*"
@@ -15,6 +17,16 @@ RELOP_GREATER_THAN_OR_EQUALS = ">="
 RELOP_LESS_THAN_OR_EQUALS = "<="
 RELOP_REALLY_GREATER_THAN = ">"
 RELOP_REALLY_LESS_THAN = "<"
+SIGNATURE_LINE = "-------Ilai Azaria 327650255-------"
+PARSING_ERROR_MSG = (
+    "Compilation failed: A runtime error occured while trying to parse your file..."
+)
+ILLEGAL_FILENAME_ERROR = "Error: Filename doesn't have .ou at the end of it..."
+TOO_MANY_ARGV_PARAMS_ERROR = "Too many parameters given to argv. Please provide only the cpl filename! Aborting..."
+NOT_ENOUGH_ARGV_PARAMS_ERROR = (
+    "Not enough parameters given to argv. Please provide the cpl filename! Aborting..."
+)
+FILE_READING_ERROR = "Error while trying to read your file..."
 
 
 def error_print(*args, **kwargs):
@@ -32,7 +44,7 @@ def is_float(string):
         float(string)
         return (
             "." in string
-        )  # ceck if there is a decimal point, indicating it's a float
+        )  # check if there is a decimal point, indicating it's a float
     except ValueError:
         return False
 
@@ -63,15 +75,12 @@ def clean_newlines(code: str):
 
 
 def reparse_output(code: str):
-    return clean_newlines(code) + "\nHALT"
+    return clean_newlines(code) + f"\nHALT\n{SIGNATURE_LINE}"
+
+
+def raw_filename(filename: str):
+    return filename.rstrip(".ou")
 
 
 if __name__ == "__main__":
-    print(is_float("3.14"))  # Output: True
-    print(is_float("5"))  # Output: False
-    print(is_float("3.0"))
-
-    print(is_integer("3"))  # Output: True
-    print(is_integer("3.0"))  # Output: False
-
-    print(float_to_int_str("3.8"))
+    pass

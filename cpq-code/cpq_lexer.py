@@ -93,9 +93,17 @@ class CpqLexer(Lexer):
         self.symbol_table.add_variable(variable_name=str(t.value))
         return t
 
+    def LBRACES(self, t):
+        self.symbol_table.curly_braces_nesting_level += 1
+        return t
+
+    def RBRACES(self, t):
+        self.symbol_table.curly_braces_nesting_level -= 1
+        return t
+
     def error(self, t):
         error_print(
-            f"error: Error in lexical analysis on line {self.lineno}: Illegal character '%s'"
+            f"Error in lexical analysis on line {self.lineno}: Illegal character '%s'"
             % t.value[0]
         )
         self.index += 1

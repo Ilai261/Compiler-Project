@@ -1,0 +1,26 @@
+RINP a
+RINP b
+RLSS ti0 a b
+REQL ti1 3.0 a
+INQL ti2 ti0 0
+INQL ti3 ti1 0
+IMLT ti4 ti2 ti3
+IGRT ti5 ti4 0
+JMPZ L3 ti5
+REQL ti6 a 5.0
+JMPZ L1 ti6
+RADD tf0 a b
+RPRT tf0
+JUMP L0
+L1:
+RSUB tf1 a b
+RPRT tf1
+L0:
+RPRT a
+RASN c 5.5
+JUMP L2
+L3:
+RPRT b
+L2:
+HALT
+-------Ilai Azaria 327650255-------

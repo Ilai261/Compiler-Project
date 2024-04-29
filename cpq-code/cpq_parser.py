@@ -75,7 +75,7 @@ class CpqParser(Parser):
         if self.symbol_table.get_variable_type(p.ID) is None:
             self.errors_detected = True
             error_print(
-                f"error in assignment stmt on line {p.lineno}, tried to assign to non declared variable!.."
+                f"Semantic error in assignment stmt on line {p.lineno}, tried to assign to non declared variable!.."
             )
             return CodeConstruct(generated_code="")
         expression: CodeConstruct = p.expression
@@ -87,7 +87,7 @@ class CpqParser(Parser):
         if generated_code == False:
             self.errors_detected = True
             error_print(
-                f"error in assignment stmt on line {p.lineno}, tried to assign float to int!.."
+                f"Semantic error in assignment stmt on line {p.lineno}, tried to assign float to int!.."
             )
             generated_code = ""
         return CodeConstruct(generated_code=generated_code)
@@ -97,7 +97,7 @@ class CpqParser(Parser):
         if self.symbol_table.get_variable_type(p.ID) is None:
             self.errors_detected = True
             error_print(
-                f"error in input stmt on line {p.lineno}, tried to get input into a non declared variable!.."
+                f"Semantic error in input stmt on line {p.lineno}, tried to get input into a non declared variable!.."
             )
             return CodeConstruct(generated_code="")
         generated_code = self.code_generator.generate_input_stmt(id=p.ID)
@@ -330,7 +330,7 @@ class CpqParser(Parser):
     def factor(self, p):
         if self.symbol_table.get_variable_type(p.ID) is None:
             error_print(
-                f"error on line {p.lineno}, tried to use a non declared variable!.."
+                f"Semantic error on line {p.lineno}, tried to use a non declared variable!.."
             )
             self.errors_detected = True
             return CodeConstruct(generated_code="", retval_var=None)
@@ -344,13 +344,25 @@ class CpqParser(Parser):
     def empty(self, p):
         pass
 
+    # This parser takes care of syntax errors using panic-mode recovery
     def error(self, p):
-        if p:
-            print("Syntax error at token", p.type)
-            # Just discard the token and tell the parser it's okay.
-            self.errok()
-        else:
-            print("Syntax error at EOF")
+        # this is done to get rid of errors where the parser 'forgot' that we already entered a new nesting level
+        # and it puts out an error for a certain '}' token
+        if p.type == "RBRACES" and self.symbol_table.curly_braces_nesting_level >= 0:
+            return
+
+        self.errors_detected = True
+        print(
+            f"Syntax error at token {p.type} on line {p.lineno}.."
+        )  # we print the error
+        if not p:
+            return  # EOF
+        while True:
+            tok = next(self.tokens, None)
+            # We search for a '}' token to restart the parser, this is the panic-mode recovery
+            if not tok or tok.type == "RBRACES":
+                break
+        self.restart()  # we restart the parser as we found a '}' token
 
     def __init__(self, symbol_table):
         super().__init__()

@@ -7,6 +7,7 @@ FLOAT = "float"
 class SymbolTable:
     def __init__(self):
         self.table: dict[str:str] = {}  # we save each variable's name and type
+        self.curly_braces_nesting_level = 0
 
     def __str__(self) -> str:
         table = "The symbol table:\n----------------------------\n"
