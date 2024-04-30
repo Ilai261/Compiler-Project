@@ -1,4 +1,4 @@
-""" Written by Ilai Azaria, 327650255
+""" Written by Ilai Azaria, 2024
     This is an utility module
 """
 
@@ -21,7 +21,7 @@ RELOP_GREATER_THAN_OR_EQUALS = ">="
 RELOP_LESS_THAN_OR_EQUALS = "<="
 RELOP_REALLY_GREATER_THAN = ">"
 RELOP_REALLY_LESS_THAN = "<"
-SIGNATURE_LINE = "-------Ilai Azaria 327650255-------"
+SIGNATURE_LINE = "-------Ilai Azaria 2024-------"
 PARSING_ERROR_MSG = (
     "Compilation failed: A runtime error occured while trying to parse your file..."
 )

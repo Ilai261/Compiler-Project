@@ -1,4 +1,4 @@
-""" Written by Ilai Azaria, 327650255
+""" Written by Ilai Azaria, 2024
     This module defines the 'CodeConstruct' class, which is the data structure used in generating code
 """
 

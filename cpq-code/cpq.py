@@ -1,4 +1,4 @@
-""" Written by Ilai Azaria, 327650255
+""" Written by Ilai Azaria, 2024
     This is the main module for running the compiler
 """
 

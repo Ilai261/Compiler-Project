@@ -1,4 +1,4 @@
-""" Written by Ilai Azaria, 327650255
+""" Written by Ilai Azaria, 2024
     This module defines the Lexer class for the compiler's lexical analysis 
 """
 

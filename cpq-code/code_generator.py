@@ -1,4 +1,4 @@
-""" Written by Ilai Azaria, 327650255
+""" Written by Ilai Azaria, 2024
     This module takes care of generating code for the parser in real-time
 """
 
