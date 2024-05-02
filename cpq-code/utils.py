@@ -43,7 +43,7 @@ def legal_filename(filename: str):
     return True
 
 
-def is_float(string):
+def is_num_float(string):
     try:
         float(string)
         return (
@@ -53,7 +53,7 @@ def is_float(string):
         return False
 
 
-def is_integer(string):
+def is_num_integer(string):
     try:
         int(string)
         return True

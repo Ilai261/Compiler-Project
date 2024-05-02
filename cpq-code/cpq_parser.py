@@ -350,9 +350,14 @@ class CpqParser(Parser):
 
     # This parser takes care of syntax errors using panic-mode recovery
     def error(self, p):
-        # this is done to get rid of errors where the parser 'forgot' that we already entered a new nesting level
+        # this is done to get rid of errors where the parser 'forgot' due to panic mode that we already entered a new nesting level
         # and it puts out an error for a certain '}' token
-        if p.type == "RBRACES" and self.symbol_table.curly_braces_nesting_level >= 0:
+        if (
+            p.type == "RBRACES"
+            and self.symbol_table.curly_braces_nesting_level >= 0
+            and self.errors_detected
+        ):
+            self.restart()
             return
 
         self.errors_detected = True
@@ -360,6 +365,7 @@ class CpqParser(Parser):
             f"Syntax error at token {p.type} on line {p.lineno}.."
         )  # we print the error
         if not p:
+            print(f"Syntax error at EOF...")  # we print the error
             return  # EOF
         while True:
             tok = next(self.tokens, None)

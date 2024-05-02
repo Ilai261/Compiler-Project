@@ -15,9 +15,9 @@ JUMP L0
 L1:
 RSUB tf1 a b
 RPRT tf1
-L0:
 RPRT a
 RASN c 5.5
+L0:
 JUMP L2
 L3:
 RPRT b

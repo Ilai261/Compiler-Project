@@ -44,8 +44,6 @@ class Compiler:
                         with open(f"{raw_file}.qud", "w") as new_file:
                             new_file.write(reparse_output(result.generated_code))
                 except Exception as e:
-                    print(type(e).__name__, "–", e)
                     error_print(PARSING_ERROR_MSG)
         except Exception as e:
-            print(type(e).__name__, "-", e)
             error_print(FILE_READING_ERROR)
