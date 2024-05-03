@@ -4,6 +4,8 @@
 
 import sys
 
+# we insert sly library into the path
+# this insertion is relative, therefore it's important to run cpq.py from the folder containing cpq-code
 sys.path.insert(0, "sly-master\\src\\")
 from compiler import Compiler
 from utils import (
@@ -14,6 +16,8 @@ from utils import (
 )
 
 if __name__ == "__main__":
+    # we print a signature to stderr, check if the length of argv is legal and if it is-
+    # we call the compiler to run on the file that the user supplied
     error_print(SIGNATURE_LINE)
     cpq_compiler = Compiler()
     if len(sys.argv) > 2:  # more than one parameter

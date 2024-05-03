@@ -9,8 +9,10 @@ from symbol_table import SymbolTable
 from utils import error_print
 
 
+# this is the lexer class
 class CpqLexer(Lexer):
 
+    # all of cpl's tokens
     tokens = {
         BREAK,
         CASE,
@@ -42,19 +44,21 @@ class CpqLexer(Lexer):
         CAST,
     }
 
-    ignore = " \t\r"  # whitespace
-    ignore_newline = r"\n+"
+    ignore = " \t\r"  # ignore whitespace
+    ignore_newline = r"\n+"  # ignore newlines
 
     # comments
     @_(r"(\"[^\"]*\"(?!\\))|(//[^\n]*$|/(?!\\)\*[\s\S]*?\*(?!\\)/)")
     def COMMENT(self, t):
-        self.lineno += t.value.count("\n")  # count lines in comment
+        self.lineno += t.value.count(
+            "\n"
+        )  # count lines in comment for correct error reporting
 
     # count newlines
     def ignore_newline(self, t):
         self.lineno += t.value.count("\n")
 
-    # Tokens
+    # special id tokens
     BREAK = r"break"
     CASE = r"case"
     DEFAULT = r"default"
@@ -67,7 +71,7 @@ class CpqLexer(Lexer):
     SWITCH = r"switch"
     WHILE = r"while"
 
-    # Special symbols
+    # special symbols
     LBRACES = r"\{"
     RBRACES = r"\}"
     LPAREN = r"\("
@@ -93,18 +97,22 @@ class CpqLexer(Lexer):
         self.symbol_table: SymbolTable = symbol_table
         self.errors_detected = False
 
+    # if we encounter a variable we add it to the symbol table
     def ID(self, t):
         self.symbol_table.add_variable(variable_name=str(t.value))
         return t
 
+    # we calcualte the nesting level of braces for correct syntax error reporting
     def LBRACES(self, t):
         self.symbol_table.curly_braces_nesting_level += 1
         return t
 
+    # we calcualte the nesting level of braces for correct syntax error reporting
     def RBRACES(self, t):
         self.symbol_table.curly_braces_nesting_level -= 1
         return t
 
+    # if we encounter a lexical error this function is called
     def error(self, t):
         error_print(
             f"Error in lexical analysis on line {self.lineno}: Illegal character '%s'"

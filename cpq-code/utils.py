@@ -1,10 +1,11 @@
 """ Written by Ilai Azaria, 2024
-    This is an utility module
+    This is a utility module
 """
 
 import re
 import sys
 
+# here we have all of the project's constants
 INT = "int"
 FLOAT = "float"
 INT_VAR = "ti"
@@ -33,16 +34,19 @@ NOT_ENOUGH_ARGV_PARAMS_ERROR = (
 FILE_READING_ERROR = "Error while trying to read your file..."
 
 
+# print to stderr
 def error_print(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
+# checks if a filename ends with .ou
 def legal_filename(filename: str):
     if not filename.endswith(".ou"):
         return False
     return True
 
 
+# checks if a string is a float number
 def is_num_float(string):
     try:
         float(string)
@@ -53,6 +57,7 @@ def is_num_float(string):
         return False
 
 
+# checks if a string is an integer number
 def is_num_integer(string):
     try:
         int(string)
@@ -61,6 +66,7 @@ def is_num_integer(string):
         return False
 
 
+# converts a float number string to an integer number string
 def float_to_int_str(float_str):
     try:
         float_val = float(float_str)
@@ -71,6 +77,7 @@ def float_to_int_str(float_str):
         return None
 
 
+# strips a string of newlines at the beginning and replaces 2 or more consecutive newlines with one newline
 def clean_newlines(code: str):
     # we use regular expressions to replace consecutive \n with single \n, and also remove leading \n
     code = code.lstrip("\n")
@@ -78,10 +85,12 @@ def clean_newlines(code: str):
     return cleaned_text
 
 
+# cleans newlines and adds a 'HALT' and a signature line in the end of the string
 def reparse_output(code: str):
     return clean_newlines(code) + f"\nHALT\n{SIGNATURE_LINE}"
 
 
+# strips a filename of .ou in its end
 def raw_filename(filename: str):
     return filename.rstrip(".ou")
 

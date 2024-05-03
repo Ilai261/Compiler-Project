@@ -8,6 +8,7 @@ INT = "int"
 FLOAT = "float"
 
 
+# this is the symbol table class
 class SymbolTable:
     def __init__(self):
         self.table: dict[str:str] = {}  # we save each variable's name and type
@@ -35,8 +36,10 @@ class SymbolTable:
         except Exception:
             return None
 
-    def change_variable_type(self, variable_name, variable_type):
+    # this function sets a variable's type in the symbol table
+    def set_variable_type(self, variable_name, variable_type):
         if not variable_name in self.table.keys():
+            # in theory this error will never occur, but i used it for debugging
             error_print(
                 f"Error while trying to change a variable {variable_name}'s value in the symbol table: it doesn't exist..."
             )
