@@ -15,9 +15,10 @@ from utils import (
     error_print,
 )
 
-if __name__ == "__main__":
-    # we print a signature to stderr, check if the length of argv is legal and if it is-
-    # we call the compiler to run on the file that the user supplied
+
+# we print a signature to stderr, check if the length of argv is legal and if it is-
+# we call the compiler to run on the file that the user supplied
+def main():
     error_print(SIGNATURE_LINE)
     cpq_compiler = Compiler()
     if len(sys.argv) > 2:  # more than one parameter
@@ -26,3 +27,7 @@ if __name__ == "__main__":
         error_print(NOT_ENOUGH_ARGV_PARAMS_ERROR)
     else:
         cpq_compiler.run_on_file(sys.argv[1])
+
+
+if __name__ == "__main__":
+    main()
