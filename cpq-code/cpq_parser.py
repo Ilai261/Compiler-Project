@@ -383,6 +383,10 @@ class CpqParser(Parser):
     # This means that usually most of the syntax errors will not be detected on one run,
     # but eventually as the user fixes those errors it will detect all of them
     def error(self, p):
+        # if we got to end of file
+        if not p:
+            return
+
         # this is done to get rid of errors where the parser 'forgot' due to panic mode that we already entered a new nesting level
         # and it puts out an error for a certain '}' token
         if (
@@ -397,9 +401,6 @@ class CpqParser(Parser):
         print(
             f"Syntax error at token {p.type} on line {p.lineno}.."
         )  # we print the error
-        if not p:
-            print(f"Syntax error at EOF...")  # we print the error
-            return  # EOF
         while True:
             tok = next(self.tokens, None)
             # We search for a '}' token to restart the parser, this is the panic-mode recovery
