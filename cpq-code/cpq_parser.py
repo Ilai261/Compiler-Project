@@ -59,11 +59,23 @@ class CpqParser(Parser):
     # we build the idlist as a list
     @_("idlist COMMA ID")
     def idlist(self, p):
+        # if the user declared a variable more than once we throw an error
+        if p.ID in p.idlist or (self.symbol_table.has_variable(p.ID) and self.symbol_table.get_variable_type(p.ID) is not None):
+            self.errors_detected = True
+            error_print(
+                f"Semantic error in declarations on line {p.lineno}, tried to declare the variable {p.ID} more than once.."
+            )
         p.idlist.append(p.ID)
         return p.idlist
 
     @_("ID")
     def idlist(self, p):
+        # if the user declared a variable more than once we throw an error
+        if self.symbol_table.has_variable(p.ID) and self.symbol_table.get_variable_type(p.ID) is not None:
+            self.errors_detected = True
+            error_print(
+                f"Semantic error in declarations on line {p.lineno}, tried to declare the variable {p.ID} more than once.."
+            )
         return [
             p.ID,
         ]
