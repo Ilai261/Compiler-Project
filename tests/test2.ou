@@ -1,4 +1,4 @@
-/* Finding minimum between two numbers */
+/* Some checks */
 a, b, tf1: float;
 c: int;
 
